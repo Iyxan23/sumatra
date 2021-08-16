@@ -1,4 +1,4 @@
-package com.iyxan23.sumatra.classfile
+package com.iyxan23.sumatra.classfile.models
 
 // https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4
 sealed class ConstantInfo(
