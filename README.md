@@ -4,5 +4,5 @@ JVM implementation on Kotlin without any external dependencies, doing this mostl
 # Target
  - Be able to parse .class files
  - Be able to execute classes
- - Mostly comply with the [Java SE 8 virtual machine specification](https://docs.oracle.com/javase/specs/jvms/se8/html/)
+ - Mostly comply with the [Java SE 11 virtual machine specification](https://docs.oracle.com/javase/specs/jvms/se11/html/)
  - NO EXTERNAL DEPENDENCIES (except for the kotlin stdlib)
