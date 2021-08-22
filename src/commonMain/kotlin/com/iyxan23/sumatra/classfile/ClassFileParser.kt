@@ -71,13 +71,13 @@ object ClassFileParser {
                 return@repeat
             }
 
-            val constInfo = ConstantInfo.parseConstantInfo(stream)
+            val constInfo = ConstantInfoParser.parseConstantInfo(stream)
             constantInfos.add(constInfo)
 
             // 8byte consts like long and double uses two entries in the constant pool for no reason, and its unused..
             // so we need to skip it
             // check: https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4.5
-            if (constInfo.tag == ConstantInfo.Type.LONG || constInfo.tag == ConstantInfo.Type.DOUBLE) {
+            if (constInfo.tag == ConstantInfoType.LONG || constInfo.tag == ConstantInfoType.DOUBLE) {
                 skip = true
             }
         }

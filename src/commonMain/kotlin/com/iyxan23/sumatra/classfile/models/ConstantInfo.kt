@@ -4,245 +4,20 @@ import java.io.DataInputStream
 
 // https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4
 sealed class ConstantInfo(
-    val tag: Type
+    val tag: ConstantInfoType
 ) {
-    companion object {
-        /* cp_info {
-         *   u1 tag;
-         *   u1 info[];
-         * }
-         */
-        fun parseConstantInfo(stream: DataInputStream): ConstantInfo {
-            val tag: UByte
-            return when (Type.findTag(stream.readUnsignedByte().toUByte().also { tag = it })) {
-                /* CONSTANT_Utf8_info {
-                 *    u1 tag;
-                 *    u2 length;
-                 *    u1 bytes[length];
-                 * }
-                 */
-                Type.UTF8 -> {
-                    val length = stream.readUnsignedShort()
-                    val arr = ByteArray(length)
-                    stream.read(arr)
-
-                    Utf8(length.toUShort(), arr)
-                }
-
-                /* CONSTANT_Integer_info {
-                 *     u1 tag;
-                 *     u4 bytes;
-                 * }
-                 */
-                Type.INTEGER -> {
-                    Integer(stream.readInt())
-                }
-
-                /* CONSTANT_Float_info {
-                 *     u1 tag;
-                 *     u4 bytes;
-                 * }
-                 */
-                Type.FLOAT -> {
-                    @Suppress("RemoveRedundantQualifierName") // <- false positive
-                    Float(kotlin.Float.fromBits(stream.readInt()))
-                }
-
-                /* CONSTANT_Long_info {
-                 *    u1 tag;
-                 *    u4 high_bytes;
-                 *    u4 low_bytes;
-                 * }
-                 */
-                Type.LONG -> {
-                    Long(stream.readLong())
-                }
-
-                /* CONSTANT_Double_info {
-                 *     u1 tag;
-                 *     u4 high_bytes;
-                 *     u4 low_bytes;
-                 * }
-                 */
-                Type.DOUBLE -> {
-                    Double(stream.readDouble())
-                }
-
-                /* CONSTANT_Class_info {
-                 *     u1 tag;
-                 *     u2 name_index;
-                 * }
-                 */
-                Type.CLASS -> {
-                    Class(stream.readUnsignedShort().toUShort())
-                }
-
-                /* CONSTANT_String_info {
-                 *     u1 tag;
-                 *     u2 string_index;
-                 * }
-                 */
-                Type.STRING -> {
-                    String(stream.readUnsignedShort().toUShort())
-                }
-
-                /* CONSTANT_Fieldref_info {
-                 *     u1 tag;
-                 *     u2 class_index;
-                 *     u2 name_and_type_index;
-                 * }
-                 */
-                Type.FIELD_REF -> {
-                    FieldRef(
-                        stream.readUnsignedShort().toUShort(),
-                        stream.readUnsignedShort().toUShort(),
-                    )
-                }
-
-                /* CONSTANT_Methodref_info {
-                 *     u1 tag;
-                 *     u2 class_index;
-                 *     u2 name_and_type_index;
-                 * }
-                 */
-                Type.METHOD_REF -> {
-                    MethodRef(
-                        stream.readUnsignedShort().toUShort(),
-                        stream.readUnsignedShort().toUShort(),
-                    )
-                }
-
-                /* CONSTANT_InterfaceMethodref_info {
-                 *     u1 tag;
-                 *     u2 class_index;
-                 *     u2 name_and_type_index;
-                 * }
-                 */
-                Type.INTERFACE_METHOD_REF -> {
-                    InterfaceMethodRef(
-                        stream.readUnsignedShort().toUShort(),
-                        stream.readUnsignedShort().toUShort(),
-                    )
-                }
-
-                /* CONSTANT_NameAndType_info {
-                 *     u1 tag;
-                 *     u2 name_index;
-                 *     u2 descriptor_index;
-                 * }
-                 */
-                Type.NAME_AND_TYPE -> {
-                    NameAndType(
-                        stream.readUnsignedShort().toUShort(),
-                        stream.readUnsignedShort().toUShort(),
-                    )
-                }
-
-                /* CONSTANT_MethodHandle_info {
-                 *     u1 tag;
-                 *     u1 reference_kind;
-                 *     u2 reference_index;
-                 * }
-                 */
-                Type.METHOD_HANDLE -> {
-                    MethodHandle(
-                        stream.readUnsignedByte().toUByte(),
-                        stream.readUnsignedShort().toUShort()
-                    )
-                }
-
-                /* CONSTANT_MethodType_info {
-                 *     u1 tag;
-                 *     u2 descriptor_index;
-                 * }
-                 */
-                Type.METHOD_TYPE -> {
-                    MethodType(stream.readUnsignedShort().toUShort())
-                }
-
-                /* CONSTANT_Dynamic_info {
-                 *     u1 tag;
-                 *     u2 bootstrap_method_attr_index;
-                 *     u2 name_and_type_index;
-                 * }
-                 */
-                Type.DYNAMIC -> {
-                    Dynamic(
-                        stream.readUnsignedShort().toUShort(),
-                        stream.readUnsignedShort().toUShort(),
-                    )
-                }
-
-                /* CONSTANT_InvokeDynamic_info {
-                 *     u1 tag;
-                 *     u2 bootstrap_method_attr_index;
-                 *     u2 name_and_type_index;
-                 * }
-                 */
-                Type.INVOKE_DYNAMIC -> {
-                    InvokeDynamic(
-                        stream.readUnsignedShort().toUShort(),
-                        stream.readUnsignedShort().toUShort(),
-                    )
-                }
-
-                /* CONSTANT_Module_info {
-                 *     u1 tag;
-                 *     u2 name_index;
-                 * }
-                 */
-                Type.MODULE -> {
-                    Module(stream.readUnsignedShort().toUShort())
-                }
-
-                /* CONSTANT_Package_info {
-                 *     u1 tag;
-                 *     u2 name_index;
-                 * }
-                 */
-                Type.PACKAGE -> {
-                    Package(stream.readUnsignedShort().toUShort())
-                }
-
-                null -> {
-                    throw UnsupportedOperationException(
-                        "Unknown ConstantInfo with the tag $tag, maybe this is class is compiled in a newer " +
-                        "version of java's bytecode specification? this JVM implementation supports Java SE 11"
-                    )
-                }
-            }
-        }
-    }
-
-    enum class Type(private val tag: UByte) {
-        UTF8(1u),
-        INTEGER(3u),
-        FLOAT(4u),
-        LONG(5u),
-        DOUBLE(6u),
-        CLASS(7u),
-        STRING(8u),
-        FIELD_REF(9u),
-        METHOD_REF(10u),
-        INTERFACE_METHOD_REF(11u),
-        NAME_AND_TYPE(12u),
-        METHOD_HANDLE(15u),
-        METHOD_TYPE(16u),
-        DYNAMIC(17u),
-        INVOKE_DYNAMIC(18u),
-        MODULE(19u),
-        PACKAGE(20u);
-
-        companion object {
-            fun findTag(tag: UByte): Type? =
-                values().find { it.tag == tag }
-        }
-    }
+    /**
+     * This function will be called by [com.iyxan23.sumatra.classfile.ClassFileParser] to resolve the references of a
+     * ConstantInfo, like, setting the name of a [Class], etc
+     */
+    open fun resolveReferences(constantPool: Array<ConstantInfo>) {}
 
     data class Utf8(
         val length: UShort,
         val bytes: ByteArray,
-    ) : ConstantInfo(Type.UTF8) {
+    ) : ConstantInfo(ConstantInfoType.UTF8) {
+        val string get() = String(bytes)
+
         // had to override equals and hashCode since we have an Array
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
@@ -264,73 +39,75 @@ sealed class ConstantInfo(
     }
 
     data class Integer(
-        val bytes: Int
-    ) : ConstantInfo(Type.INTEGER)
+        val integer: Int
+    ) : ConstantInfo(ConstantInfoType.INTEGER)
 
     data class Float(
         val float: kotlin.Float
-    ) : ConstantInfo(Type.FLOAT)
+    ) : ConstantInfo(ConstantInfoType.FLOAT)
 
     data class Long(
         val long: kotlin.Long
-    ) : ConstantInfo(Type.LONG)
+    ) : ConstantInfo(ConstantInfoType.LONG)
 
     data class Double(
         val double: kotlin.Double
-    ) : ConstantInfo(Type.DOUBLE)
+    ) : ConstantInfo(ConstantInfoType.DOUBLE)
 
     data class Class(
         val nameIndex: UShort
-    ) : ConstantInfo(Type.CLASS)
+    ) : ConstantInfo(ConstantInfoType.CLASS) {
+
+    }
 
     data class String(
         val stringIndex: UShort,
-    ) : ConstantInfo(Type.STRING)
+    ) : ConstantInfo(ConstantInfoType.STRING)
 
     data class FieldRef(
         val classIndex: UShort,
-        val nameAndTypeIndex: UShort,
-    ) : ConstantInfo(Type.FIELD_REF)
+        val nameAndConstantInfoTypeIndex: UShort,
+    ) : ConstantInfo(ConstantInfoType.FIELD_REF)
 
     data class MethodRef(
         val classIndex: UShort,
-        val nameAndTypeIndex: UShort,
-    ) : ConstantInfo(Type.METHOD_REF)
+        val nameAndConstantInfoTypeIndex: UShort,
+    ) : ConstantInfo(ConstantInfoType.METHOD_REF)
 
     data class InterfaceMethodRef(
         val classIndex: UShort,
-        val nameAndTypeIndex: UShort,
-    ) : ConstantInfo(Type.INTERFACE_METHOD_REF)
+        val nameAndConstantInfoTypeIndex: UShort,
+    ) : ConstantInfo(ConstantInfoType.INTERFACE_METHOD_REF)
 
-    data class NameAndType(
+    data class NameAndConstantInfoType(
         val nameIndex: UShort,
         val descriptorIndex: UShort,
-    ) : ConstantInfo(Type.NAME_AND_TYPE)
+    ) : ConstantInfo(ConstantInfoType.NAME_AND_TYPE)
 
     data class MethodHandle(
         val referenceKind: UByte,
         val referenceIndex: UShort,
-    ) : ConstantInfo(Type.METHOD_HANDLE)
+    ) : ConstantInfo(ConstantInfoType.METHOD_HANDLE)
 
-    data class MethodType(
+    data class MethodConstantInfoType(
         val descriptorIndex: UShort
-    ) : ConstantInfo(Type.METHOD_TYPE)
+    ) : ConstantInfo(ConstantInfoType.METHOD_TYPE)
 
     data class Dynamic(
         val bootstrapMethodAttrIndex: UShort,
-        val nameAndTypeIndex: UShort,
-    ) : ConstantInfo(Type.DYNAMIC)
+        val nameAndConstantInfoTypeIndex: UShort,
+    ) : ConstantInfo(ConstantInfoType.DYNAMIC)
 
     data class InvokeDynamic(
         val bootstrapMethodAttrIndex: UShort,
-        val nameAndTypeIndex: UShort,
-    ) : ConstantInfo(Type.INVOKE_DYNAMIC)
+        val nameAndConstantInfoTypeIndex: UShort,
+    ) : ConstantInfo(ConstantInfoType.INVOKE_DYNAMIC)
 
     data class Module(
         val nameIndex: UShort
-    ) : ConstantInfo(Type.MODULE)
+    ) : ConstantInfo(ConstantInfoType.MODULE)
     
     data class Package(
         val nameIndex: UShort
-    ) : ConstantInfo(Type.PACKAGE)
+    ) : ConstantInfo(ConstantInfoType.PACKAGE)
 }
