@@ -50,18 +50,13 @@ object ClassFileParser {
             magic,
             minorVersion,
             majorVersion,
-            constantPoolCount.toUShort(),
             constantPool,
             accessFlags,
             thisClass,
             superClass,
-            interfacesCount,
             interfaces,
-            fieldsCount,
             fields,
-            methodsCount,
             methods,
-            attributesCount,
             attributes
         )
     }
