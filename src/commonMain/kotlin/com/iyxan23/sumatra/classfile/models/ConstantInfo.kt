@@ -12,8 +12,9 @@ sealed class ConstantInfo(
          *   u1 info[];
          * }
          */
-        fun parseConstantInfo(stream: DataInputStream): ConstantInfo =
-            when (Type.findTag(stream.readUnsignedByte().toUByte())) {
+        fun parseConstantInfo(stream: DataInputStream): ConstantInfo {
+            val tag: UByte
+            return when (Type.findTag(stream.readUnsignedByte().toUByte().also { tag = it })) {
                 /* CONSTANT_Utf8_info {
                  *    u1 tag;
                  *    u2 length;
@@ -57,21 +58,160 @@ sealed class ConstantInfo(
                     Long(stream.readLong())
                 }
 
-                Type.DOUBLE -> TODO()
-                Type.CLASS -> TODO()
-                Type.STRING -> TODO()
-                Type.FIELD_REF -> TODO()
-                Type.METHOD_REF -> TODO()
-                Type.INTERFACE_METHOD_REF -> TODO()
-                Type.NAME_AND_TYPE -> TODO()
-                Type.METHOD_HANDLE -> TODO()
-                Type.METHOD_TYPE -> TODO()
-                Type.DYNAMIC -> TODO()
-                Type.INVOKE_DYNAMIC -> TODO()
-                Type.MODULE -> TODO()
-                Type.PACKAGE -> TODO()
-                null -> TODO()
+                /* CONSTANT_Double_info {
+                 *     u1 tag;
+                 *     u4 high_bytes;
+                 *     u4 low_bytes;
+                 * }
+                 */
+                Type.DOUBLE -> {
+                    Double(stream.readDouble())
+                }
+
+                /* CONSTANT_Class_info {
+                 *     u1 tag;
+                 *     u2 name_index;
+                 * }
+                 */
+                Type.CLASS -> {
+                    Class(stream.readUnsignedShort().toUShort())
+                }
+
+                /* CONSTANT_String_info {
+                 *     u1 tag;
+                 *     u2 string_index;
+                 * }
+                 */
+                Type.STRING -> {
+                    String(stream.readUnsignedShort().toUShort())
+                }
+
+                /* CONSTANT_Fieldref_info {
+                 *     u1 tag;
+                 *     u2 class_index;
+                 *     u2 name_and_type_index;
+                 * }
+                 */
+                Type.FIELD_REF -> {
+                    FieldRef(
+                        stream.readUnsignedShort().toUShort(),
+                        stream.readUnsignedShort().toUShort(),
+                    )
+                }
+
+                /* CONSTANT_Methodref_info {
+                 *     u1 tag;
+                 *     u2 class_index;
+                 *     u2 name_and_type_index;
+                 * }
+                 */
+                Type.METHOD_REF -> {
+                    MethodRef(
+                        stream.readUnsignedShort().toUShort(),
+                        stream.readUnsignedShort().toUShort(),
+                    )
+                }
+
+                /* CONSTANT_InterfaceMethodref_info {
+                 *     u1 tag;
+                 *     u2 class_index;
+                 *     u2 name_and_type_index;
+                 * }
+                 */
+                Type.INTERFACE_METHOD_REF -> {
+                    InterfaceMethodRef(
+                        stream.readUnsignedShort().toUShort(),
+                        stream.readUnsignedShort().toUShort(),
+                    )
+                }
+
+                /* CONSTANT_NameAndType_info {
+                 *     u1 tag;
+                 *     u2 name_index;
+                 *     u2 descriptor_index;
+                 * }
+                 */
+                Type.NAME_AND_TYPE -> {
+                    NameAndType(
+                        stream.readUnsignedShort().toUShort(),
+                        stream.readUnsignedShort().toUShort(),
+                    )
+                }
+
+                /* CONSTANT_MethodHandle_info {
+                 *     u1 tag;
+                 *     u1 reference_kind;
+                 *     u2 reference_index;
+                 * }
+                 */
+                Type.METHOD_HANDLE -> {
+                    MethodHandle(
+                        stream.readUnsignedByte().toUByte(),
+                        stream.readUnsignedShort().toUShort()
+                    )
+                }
+
+                /* CONSTANT_MethodType_info {
+                 *     u1 tag;
+                 *     u2 descriptor_index;
+                 * }
+                 */
+                Type.METHOD_TYPE -> {
+                    MethodType(stream.readUnsignedShort().toUShort())
+                }
+
+                /* CONSTANT_Dynamic_info {
+                 *     u1 tag;
+                 *     u2 bootstrap_method_attr_index;
+                 *     u2 name_and_type_index;
+                 * }
+                 */
+                Type.DYNAMIC -> {
+                    Dynamic(
+                        stream.readUnsignedShort().toUShort(),
+                        stream.readUnsignedShort().toUShort(),
+                    )
+                }
+
+                /* CONSTANT_InvokeDynamic_info {
+                 *     u1 tag;
+                 *     u2 bootstrap_method_attr_index;
+                 *     u2 name_and_type_index;
+                 * }
+                 */
+                Type.INVOKE_DYNAMIC -> {
+                    InvokeDynamic(
+                        stream.readUnsignedShort().toUShort(),
+                        stream.readUnsignedShort().toUShort(),
+                    )
+                }
+
+                /* CONSTANT_Module_info {
+                 *     u1 tag;
+                 *     u2 name_index;
+                 * }
+                 */
+                Type.MODULE -> {
+                    Module(stream.readUnsignedShort().toUShort())
+                }
+
+                /* CONSTANT_Package_info {
+                 *     u1 tag;
+                 *     u2 name_index;
+                 * }
+                 */
+                Type.PACKAGE -> {
+                    Package(stream.readUnsignedShort().toUShort())
+                }
+
+                null -> {
+                    throw UnsupportedOperationException(
+                        "Unknown ConstantInfo with the tag $tag, maybe this is class is compiled in a newer " +
+                        "version of java's bytecode specification? this JVM implementation supports Java SE 11"
+                    )
+                }
             }
+        }
     }
 
     enum class Type(private val tag: UByte) {
@@ -136,8 +276,7 @@ sealed class ConstantInfo(
     ) : ConstantInfo(Type.LONG)
 
     data class Double(
-        val highBytes: Int,
-        val lowBytes: Int,
+        val double: kotlin.Double
     ) : ConstantInfo(Type.DOUBLE)
 
     data class Class(
