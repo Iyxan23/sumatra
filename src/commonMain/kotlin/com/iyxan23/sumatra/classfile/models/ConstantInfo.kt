@@ -33,7 +33,7 @@ sealed class ConstantInfo(
 
     data class Utf8(
         val length: UShort,
-        val bytes: Array<UShort>,
+        val bytes: ByteArray,
     ) : ConstantInfo(Type.UTF8) {
         // had to override equals and hashCode since we have an Array
         override fun equals(other: Any?): Boolean {
@@ -60,12 +60,11 @@ sealed class ConstantInfo(
     ) : ConstantInfo(Type.INTEGER)
 
     data class Float(
-        val bytes: Int
+        val float: kotlin.Float
     ) : ConstantInfo(Type.FLOAT)
 
     data class Long(
-        val highBytes: Int,
-        val lowBytes: Int,
+        val long: kotlin.Long
     ) : ConstantInfo(Type.LONG)
 
     data class Double(
