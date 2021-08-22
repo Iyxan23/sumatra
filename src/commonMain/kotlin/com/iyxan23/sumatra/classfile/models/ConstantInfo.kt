@@ -6,6 +6,74 @@ import java.io.DataInputStream
 sealed class ConstantInfo(
     val tag: Type
 ) {
+    companion object {
+        /* cp_info {
+         *   u1 tag;
+         *   u1 info[];
+         * }
+         */
+        fun parseConstantInfo(stream: DataInputStream): ConstantInfo =
+            when (Type.findTag(stream.readUnsignedByte().toUByte())) {
+                /* CONSTANT_Utf8_info {
+                 *    u1 tag;
+                 *    u2 length;
+                 *    u1 bytes[length];
+                 * }
+                 */
+                Type.UTF8 -> {
+                    val length = stream.readUnsignedShort()
+                    val arr = ByteArray(length)
+                    stream.read(arr)
+
+                    Utf8(length.toUShort(), arr)
+                }
+
+                /* CONSTANT_Integer_info {
+                 *     u1 tag;
+                 *     u4 bytes;
+                 * }
+                 */
+                Type.INTEGER -> {
+                    Integer(stream.readInt())
+                }
+
+                /* CONSTANT_Float_info {
+                 *     u1 tag;
+                 *     u4 bytes;
+                 * }
+                 */
+                Type.FLOAT -> {
+                    @Suppress("RemoveRedundantQualifierName") // <- false positive
+                    Float(kotlin.Float.fromBits(stream.readInt()))
+                }
+
+                /* CONSTANT_Long_info {
+                 *    u1 tag;
+                 *    u4 high_bytes;
+                 *    u4 low_bytes;
+                 * }
+                 */
+                Type.LONG -> {
+                    Long(stream.readLong())
+                }
+
+                Type.DOUBLE -> TODO()
+                Type.CLASS -> TODO()
+                Type.STRING -> TODO()
+                Type.FIELD_REF -> TODO()
+                Type.METHOD_REF -> TODO()
+                Type.INTERFACE_METHOD_REF -> TODO()
+                Type.NAME_AND_TYPE -> TODO()
+                Type.METHOD_HANDLE -> TODO()
+                Type.METHOD_TYPE -> TODO()
+                Type.DYNAMIC -> TODO()
+                Type.INVOKE_DYNAMIC -> TODO()
+                Type.MODULE -> TODO()
+                Type.PACKAGE -> TODO()
+                null -> TODO()
+            }
+    }
+
     enum class Type(private val tag: UByte) {
         UTF8(1u),
         INTEGER(3u),
