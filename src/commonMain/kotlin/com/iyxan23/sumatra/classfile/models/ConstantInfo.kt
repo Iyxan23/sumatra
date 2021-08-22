@@ -1,13 +1,40 @@
 package com.iyxan23.sumatra.classfile.models
 
+import java.io.DataInputStream
+
 // https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.4
 sealed class ConstantInfo(
-    val tag: UByte
+    val tag: Type
 ) {
+    enum class Type(private val tag: UByte) {
+        UTF8(1u),
+        INTEGER(3u),
+        FLOAT(4u),
+        LONG(5u),
+        DOUBLE(6u),
+        CLASS(7u),
+        STRING(8u),
+        FIELD_REF(9u),
+        METHOD_REF(10u),
+        INTERFACE_METHOD_REF(11u),
+        NAME_AND_TYPE(12u),
+        METHOD_HANDLE(15u),
+        METHOD_TYPE(16u),
+        DYNAMIC(17u),
+        INVOKE_DYNAMIC(18u),
+        MODULE(19u),
+        PACKAGE(20u);
+
+        companion object {
+            fun findTag(tag: UByte): Type? =
+                values().find { it.tag == tag }
+        }
+    }
+
     data class Utf8(
         val length: UShort,
         val bytes: Array<UShort>,
-    ) : ConstantInfo(1u) {
+    ) : ConstantInfo(Type.UTF8) {
         // had to override equals and hashCode since we have an Array
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
@@ -30,74 +57,74 @@ sealed class ConstantInfo(
 
     data class Integer(
         val bytes: Int
-    ) : ConstantInfo(3u)
+    ) : ConstantInfo(Type.INTEGER)
 
     data class Float(
         val bytes: Int
-    ) : ConstantInfo(4u)
+    ) : ConstantInfo(Type.FLOAT)
 
     data class Long(
         val highBytes: Int,
         val lowBytes: Int,
-    ) : ConstantInfo(5u)
+    ) : ConstantInfo(Type.LONG)
 
     data class Double(
         val highBytes: Int,
         val lowBytes: Int,
-    ) : ConstantInfo(6u)
+    ) : ConstantInfo(Type.DOUBLE)
 
     data class Class(
         val nameIndex: UShort
-    ) : ConstantInfo(7u)
+    ) : ConstantInfo(Type.CLASS)
 
     data class String(
         val stringIndex: UShort,
-    ) : ConstantInfo(8u)
+    ) : ConstantInfo(Type.STRING)
 
     data class FieldRef(
         val classIndex: UShort,
         val nameAndTypeIndex: UShort,
-    ) : ConstantInfo(9u)
+    ) : ConstantInfo(Type.FIELD_REF)
 
     data class MethodRef(
         val classIndex: UShort,
         val nameAndTypeIndex: UShort,
-    ) : ConstantInfo(10u)
+    ) : ConstantInfo(Type.METHOD_REF)
 
     data class InterfaceMethodRef(
         val classIndex: UShort,
         val nameAndTypeIndex: UShort,
-    ) : ConstantInfo(11u)
+    ) : ConstantInfo(Type.INTERFACE_METHOD_REF)
 
     data class NameAndType(
         val nameIndex: UShort,
         val descriptorIndex: UShort,
-    ) : ConstantInfo(12u)
+    ) : ConstantInfo(Type.NAME_AND_TYPE)
 
     data class MethodHandle(
         val referenceKind: UByte,
         val referenceIndex: UShort,
-    ) : ConstantInfo(15u)
+    ) : ConstantInfo(Type.METHOD_HANDLE)
 
     data class MethodType(
         val descriptorIndex: UShort
-    ) : ConstantInfo(16u)
+    ) : ConstantInfo(Type.METHOD_TYPE)
 
     data class Dynamic(
         val bootstrapMethodAttrIndex: UShort,
         val nameAndTypeIndex: UShort,
-    ) : ConstantInfo(17u)
+    ) : ConstantInfo(Type.DYNAMIC)
 
     data class InvokeDynamic(
         val bootstrapMethodAttrIndex: UShort,
         val nameAndTypeIndex: UShort,
-    ) : ConstantInfo(18u)
+    ) : ConstantInfo(Type.INVOKE_DYNAMIC)
 
     data class Module(
         val nameIndex: UShort
-    ) : ConstantInfo(19u)
+    ) : ConstantInfo(Type.MODULE)
     
     data class Package(
         val nameIndex: UShort
-    ) : ConstantInfo(20u)
+    ) : ConstantInfo(Type.PACKAGE)
 }
