@@ -6,11 +6,21 @@ import java.io.DataInputStream
 sealed class ConstantInfo(
     val tag: ConstantInfoType
 ) {
+    companion object {
+        fun parseConstantPool(stream: DataInputStream, constantInfoCount: Int): List<ConstantInfo> {
+            TODO("Not yet implemented")
+        }
+
+        fun resolveConstantPoolReferences(constantPool: List<ConstantInfo>) {
+            TODO("Not yet implemented")
+        }
+    }
+
     /**
-     * This function will be called by [com.iyxan23.sumatra.classfile.ClassFileParser] to resolve the references of a
+     * This function will be called to resolve the references of a
      * ConstantInfo, like, setting the name of a [Class], etc
      */
-    open fun resolveReferences(constantPool: Array<ConstantInfo>) {}
+    open fun resolveReferences(constantPool: List<ConstantInfo>) {}
 
     data class Utf8(
         val length: UShort,
